@@ -45,15 +45,7 @@ yarn deploy:studio
 
 Studio subgraph slug: `aave-v-4`.
 
-## Querying
 
-Once deployed, query at the Studio gateway:
-
-```bash
-curl https://api.studio.thegraph.com/query/<id>/aave-v-4/version/latest \
-  -H "Content-Type: application/json" \
-  -d '{"query": "{ hubSpokeFlows(first: 10, orderBy: block, orderDirection: desc) { type hub { name } spoke { id } amount block } }"}'
-```
 
 ## Roadmap
 
