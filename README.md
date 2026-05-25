@@ -28,24 +28,6 @@ A subgraph for Aave V4 that indexes everything [AaveKit's GraphQL API](https://a
 - `indexerHints.prune: auto` in the manifest
 - No `eth_call`s — purely event-driven mappings
 
-## Develop
-
-```bash
-yarn install
-yarn codegen
-yarn build
-```
-
-## Deploy
-
-```bash
-graph auth $STUDIO_KEY
-yarn deploy:studio
-```
-
-Studio subgraph slug: `aave-v-4`.
-
-
 
 ## Roadmap
 
