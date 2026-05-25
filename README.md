@@ -2,9 +2,6 @@
 
 A subgraph for Aave V4 that indexes everything [AaveKit's GraphQL API](https://api.aave.com/graphql) doesn't expose.
 
-**Live at:** [thegraph.com/explorer/subgraphs/aave-v-4](https://thegraph.com/studio/subgraph/aave-v-4)
-(once deployed to Studio under the slug `aave-v-4`)
-
 ## What it captures
 
 | Niche | What | AaveKit's gap |
