@@ -1,0 +1,221 @@
+[
+  {
+    "type": "event",
+    "name": "Add",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      { "indexed": false, "name": "shares", "type": "uint256" },
+      { "indexed": false, "name": "amount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Remove",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      { "indexed": false, "name": "shares", "type": "uint256" },
+      { "indexed": false, "name": "amount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Draw",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      { "indexed": false, "name": "drawnShares", "type": "uint256" },
+      { "indexed": false, "name": "drawnAmount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Restore",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      { "indexed": false, "name": "drawnShares", "type": "uint256" },
+      {
+        "indexed": false,
+        "name": "premiumDelta",
+        "type": "tuple",
+        "components": [
+          { "name": "sharesDelta", "type": "int256" },
+          { "name": "offsetRayDelta", "type": "int256" },
+          { "name": "restoredPremiumRay", "type": "uint256" }
+        ]
+      },
+      { "indexed": false, "name": "drawnAmount", "type": "uint256" },
+      { "indexed": false, "name": "premiumAmount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RefreshPremium",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      {
+        "indexed": false,
+        "name": "premiumDelta",
+        "type": "tuple",
+        "components": [
+          { "name": "sharesDelta", "type": "int256" },
+          { "name": "offsetRayDelta", "type": "int256" },
+          { "name": "restoredPremiumRay", "type": "uint256" }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReportDeficit",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      { "indexed": false, "name": "drawnShares", "type": "uint256" },
+      {
+        "indexed": false,
+        "name": "premiumDelta",
+        "type": "tuple",
+        "components": [
+          { "name": "sharesDelta", "type": "int256" },
+          { "name": "offsetRayDelta", "type": "int256" },
+          { "name": "restoredPremiumRay", "type": "uint256" }
+        ]
+      },
+      { "indexed": false, "name": "deficitAmountRay", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TransferShares",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "sender", "type": "address" },
+      { "indexed": true, "name": "receiver", "type": "address" },
+      { "indexed": false, "name": "shares", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AddAsset",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "underlying", "type": "address" },
+      { "indexed": false, "name": "decimals", "type": "uint8" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UpdateAsset",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": false, "name": "drawnIndex", "type": "uint256" },
+      { "indexed": false, "name": "drawnRate", "type": "uint256" },
+      { "indexed": false, "name": "accruedFees", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UpdateAssetConfig",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      {
+        "indexed": false,
+        "name": "config",
+        "type": "tuple",
+        "components": [
+          { "name": "feeReceiver", "type": "address" },
+          { "name": "liquidityFee", "type": "uint16" },
+          { "name": "irStrategy", "type": "address" },
+          { "name": "reinvestmentController", "type": "address" }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "AddSpoke",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UpdateSpokeConfig",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "spoke", "type": "address" },
+      {
+        "indexed": false,
+        "name": "config",
+        "type": "tuple",
+        "components": [
+          { "name": "addCap", "type": "uint40" },
+          { "name": "drawCap", "type": "uint40" },
+          { "name": "riskPremiumThreshold", "type": "uint24" },
+          { "name": "active", "type": "bool" },
+          { "name": "halted", "type": "bool" }
+        ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MintFeeShares",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "feeReceiver", "type": "address" },
+      { "indexed": false, "name": "shares", "type": "uint256" },
+      { "indexed": false, "name": "assets", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Sweep",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "reinvestmentController", "type": "address" },
+      { "indexed": false, "name": "amount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Reclaim",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "reinvestmentController", "type": "address" },
+      { "indexed": false, "name": "amount", "type": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EliminateDeficit",
+    "inputs": [
+      { "indexed": true, "name": "assetId", "type": "uint256" },
+      { "indexed": true, "name": "callerSpoke", "type": "address" },
+      { "indexed": true, "name": "coveredSpoke", "type": "address" },
+      { "indexed": false, "name": "shares", "type": "uint256" },
+      { "indexed": false, "name": "deficitAmountRay", "type": "uint256" }
+    ],
+    "anonymous": false
+  }
+]

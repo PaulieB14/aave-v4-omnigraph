@@ -1,0 +1,376 @@
+# ============================================================
+# Aave V4 Omnigraph — schema
+#
+# Indexes what AaveKit (api.aave.com/graphql) doesn't expose:
+#   1. Hub<->Spoke liquidity routing (Add/Remove/Draw/Restore/
+#      RefreshPremium/ReportDeficit/TransferShares)
+#   2. Per-user risk-premium trajectory + dynamic config drift
+#   3. Liquidation post-mortems with full on-chain context
+#   4. Spoke + reserve config governance trail
+#   5. Treasury / fee-share / deficit accounting
+#
+# Best practices applied:
+#   - Bytes for IDs (perf)
+#   - @derivedFrom for reverse relations (no big arrays)
+#   - @entity(immutable: true) for append-only event records
+#   - Pruning hint in manifest
+# ============================================================
+
+# ── Hubs ────────────────────────────────────────────────────
+type Hub @entity(immutable: false) {
+  id: Bytes! # address
+  name: String! # "Core" | "Plus" | "Prime"
+  chainId: Int!
+  createdAtBlock: BigInt!
+  createdAtTx: Bytes!
+  assets: [HubAsset!]! @derivedFrom(field: "hub")
+}
+
+type HubAsset @entity(immutable: false) {
+  id: Bytes! # hubAddress . assetId-bytes
+  hub: Hub!
+  assetId: BigInt!
+  underlying: Bytes! # ERC20 address
+  decimals: Int!
+  feeReceiver: Bytes
+  liquidityFee: Int
+  irStrategy: Bytes
+  reinvestmentController: Bytes
+  drawnIndex: BigInt
+  drawnRate: BigInt
+  accruedFees: BigInt
+  lastUpdatedBlock: BigInt
+  spokeConfigs: [HubSpokeConfig!]! @derivedFrom(field: "hubAsset")
+  flows: [HubSpokeFlow!]! @derivedFrom(field: "hubAsset")
+}
+
+type HubSpokeConfig @entity(immutable: false) {
+  id: Bytes! # hubAddress . assetId-bytes . spokeAddress
+  hub: Hub!
+  hubAsset: HubAsset!
+  spoke: Spoke!
+  addCap: BigInt!
+  drawCap: BigInt!
+  riskPremiumThreshold: Int!
+  active: Boolean!
+  halted: Boolean!
+  updatedAtBlock: BigInt!
+  updatedAtTx: Bytes!
+  history: [HubSpokeConfigSnapshot!]! @derivedFrom(field: "config")
+}
+
+type HubSpokeConfigSnapshot @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  config: HubSpokeConfig!
+  addCap: BigInt!
+  drawCap: BigInt!
+  riskPremiumThreshold: Int!
+  active: Boolean!
+  halted: Boolean!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+}
+
+# ── Spokes ──────────────────────────────────────────────────
+type Spoke @entity(immutable: false) {
+  id: Bytes! # address
+  hub: Hub
+  oracle: Bytes
+  maxUserReservesLimit: Int
+  liquidationConfig: SpokeLiquidationConfig
+  createdAtBlock: BigInt!
+  createdAtTx: Bytes!
+  reserves: [Reserve!]! @derivedFrom(field: "spoke")
+  positionManagerWhitelist: [SpokePositionManagerWhitelist!]! @derivedFrom(field: "spoke")
+}
+
+type SpokeLiquidationConfig @entity(immutable: false) {
+  id: Bytes! # spokeAddress
+  spoke: Spoke!
+  targetHealthFactor: BigInt!
+  healthFactorForMaxBonus: BigInt!
+  liquidationBonusFactor: Int!
+  updatedAtBlock: BigInt!
+  updatedAtTx: Bytes!
+  history: [SpokeLiquidationConfigSnapshot!]! @derivedFrom(field: "config")
+}
+
+type SpokeLiquidationConfigSnapshot @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  config: SpokeLiquidationConfig!
+  targetHealthFactor: BigInt!
+  healthFactorForMaxBonus: BigInt!
+  liquidationBonusFactor: Int!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+}
+
+# ── Reserves ────────────────────────────────────────────────
+type Reserve @entity(immutable: false) {
+  id: Bytes! # spokeAddress . reserveId-bytes
+  spoke: Spoke!
+  reserveId: BigInt!
+  assetId: BigInt!
+  hub: Hub!
+  priceSource: Bytes
+  collateralRisk: Int
+  paused: Boolean
+  frozen: Boolean
+  borrowable: Boolean
+  receiveSharesEnabled: Boolean
+  latestDynamicConfigKey: BigInt
+  dynamicConfigHistory: [DynamicReserveConfig!]! @derivedFrom(field: "reserve")
+  reserveConfigHistory: [ReserveConfigSnapshot!]! @derivedFrom(field: "reserve")
+  priceSourceHistory: [ReservePriceSourceSnapshot!]! @derivedFrom(field: "reserve")
+}
+
+type ReserveConfigSnapshot @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  reserve: Reserve!
+  collateralRisk: Int!
+  paused: Boolean!
+  frozen: Boolean!
+  borrowable: Boolean!
+  receiveSharesEnabled: Boolean!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type ReservePriceSourceSnapshot @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  reserve: Reserve!
+  priceSource: Bytes!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type DynamicReserveConfig @entity(immutable: true) {
+  id: Bytes! # spokeAddress . reserveId-bytes . key-bytes
+  reserve: Reserve!
+  key: BigInt!
+  collateralFactor: Int!
+  maxLiquidationBonus: BigInt!
+  liquidationFee: Int!
+  createdAtBlock: BigInt!
+  createdAtTx: Bytes!
+}
+
+# ── Hub<->Spoke Flow events (the headline data) ─────────────
+enum HubSpokeFlowType {
+  ADD
+  REMOVE
+  DRAW
+  RESTORE
+  REFRESH_PREMIUM
+  REPORT_DEFICIT
+  TRANSFER_SHARES
+}
+
+type HubSpokeFlow @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  type: HubSpokeFlowType!
+  hub: Hub!
+  hubAsset: HubAsset!
+  spoke: Spoke
+  counterpartySpoke: Spoke # for TRANSFER_SHARES receiver
+  shares: BigInt
+  amount: BigInt
+  drawnShares: BigInt
+  drawnAmount: BigInt
+  premiumAmount: BigInt
+  deficitAmountRay: BigInt
+  premiumSharesDelta: BigInt
+  premiumOffsetRayDelta: BigInt
+  restoredPremiumRay: BigInt
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+}
+
+type HubAssetDaily @entity(immutable: false) {
+  id: Bytes! # hubAssetId . day-bytes
+  hubAsset: HubAsset!
+  day: Int!
+  date: BigInt!
+  totalAddedAmount: BigInt!
+  totalRemovedAmount: BigInt!
+  totalDrawnAmount: BigInt!
+  totalRestoredAmount: BigInt!
+  totalDeficitRay: BigInt!
+  flowCount: Int!
+}
+
+# ── Users + risk premium trajectory ─────────────────────────
+type User @entity(immutable: false) {
+  id: Bytes! # address
+  latestRiskPremium: BigInt!
+  latestRiskPremiumSpoke: Spoke
+  riskPremiumHistory: [UserRiskPremiumSnapshot!]! @derivedFrom(field: "user")
+  positionManagers: [UserPositionManager!]! @derivedFrom(field: "user")
+  liquidationsAsUser: [LiquidationCall!]! @derivedFrom(field: "user")
+  premiumDebtRefreshes: [PremiumDebtRefresh!]! @derivedFrom(field: "user")
+}
+
+type UserRiskPremiumSnapshot @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  user: User!
+  spoke: Spoke!
+  riskPremium: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type UserPositionManager @entity(immutable: false) {
+  id: Bytes! # userAddress . spokeAddress . positionManagerAddress
+  user: User!
+  spoke: Spoke!
+  positionManager: Bytes!
+  approved: Boolean!
+  updatedAtBlock: BigInt!
+  updatedAtTx: Bytes!
+}
+
+type PremiumDebtRefresh @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  spoke: Spoke!
+  reserve: Reserve!
+  user: User!
+  premiumSharesDelta: BigInt!
+  premiumOffsetRayDelta: BigInt!
+  restoredPremiumRay: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+# ── User-side spoke activity ────────────────────────────────
+enum UserActivityType {
+  SUPPLY
+  WITHDRAW
+  BORROW
+  REPAY
+  SET_COLLATERAL
+}
+
+type UserActivity @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  type: UserActivityType!
+  spoke: Spoke!
+  reserve: Reserve!
+  user: User!
+  caller: Bytes
+  shares: BigInt
+  amount: BigInt
+  totalAmountRepaid: BigInt
+  usingAsCollateral: Boolean
+  premiumSharesDelta: BigInt
+  premiumOffsetRayDelta: BigInt
+  restoredPremiumRay: BigInt
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+}
+
+# ── Liquidations (highest-value data) ───────────────────────
+type LiquidationCall @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  spoke: Spoke!
+  collateralReserve: Reserve!
+  debtReserve: Reserve!
+  user: User!
+  liquidator: Bytes!
+  receiveShares: Boolean!
+  debtAmountRestored: BigInt!
+  drawnSharesLiquidated: BigInt!
+  collateralAmountRemoved: BigInt!
+  collateralSharesLiquidated: BigInt!
+  collateralSharesToLiquidator: BigInt!
+  premiumSharesDelta: BigInt!
+  premiumOffsetRayDelta: BigInt!
+  restoredPremiumRay: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+  logIndex: BigInt!
+}
+
+# ── Treasury / fees / deficits ──────────────────────────────
+type FeeMint @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  hub: Hub!
+  hubAsset: HubAsset!
+  feeReceiver: Bytes!
+  shares: BigInt!
+  assets: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type Sweep @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  hub: Hub!
+  hubAsset: HubAsset!
+  reinvestmentController: Bytes!
+  amount: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type Reclaim @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  hub: Hub!
+  hubAsset: HubAsset!
+  reinvestmentController: Bytes!
+  amount: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type DeficitEliminated @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  hub: Hub!
+  hubAsset: HubAsset!
+  callerSpoke: Spoke!
+  coveredSpoke: Spoke!
+  shares: BigInt!
+  deficitAmountRay: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+type SpokeReportedDeficit @entity(immutable: true) {
+  id: Bytes! # txHash . logIndex
+  spoke: Spoke!
+  reserve: Reserve!
+  user: User!
+  drawnShares: BigInt!
+  premiumSharesDelta: BigInt!
+  premiumOffsetRayDelta: BigInt!
+  restoredPremiumRay: BigInt!
+  block: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+# ── Position manager registry at spoke level ────────────────
+type SpokePositionManagerWhitelist @entity(immutable: false) {
+  id: Bytes! # spokeAddress . positionManagerAddress
+  spoke: Spoke!
+  positionManager: Bytes!
+  active: Boolean!
+  updatedAtBlock: BigInt!
+  updatedAtTx: Bytes!
+}

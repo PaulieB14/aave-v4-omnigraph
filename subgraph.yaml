@@ -1,0 +1,257 @@
+specVersion: 1.2.0
+schema:
+  file: ./schema.graphql
+description: Aave V4 Omnigraph — indexes Hub↔Spoke liquidity routing, per-user risk premium trajectory, full-context liquidation post-mortems, config governance trail, and treasury/fee/deficit accounting. Built for the data AaveKit's GraphQL API doesn't expose.
+repository: https://github.com/PaulieB14/aave-v4-omnigraph
+features:
+  - nonFatalErrors
+indexerHints:
+  prune: auto
+dataSources:
+  - kind: ethereum/contract
+    name: HubCore
+    network: mainnet
+    source:
+      address: "0xCca852Bc40e560adC3b1Cc58CA5b55638ce826c9"
+      abi: Hub
+      startBlock: 22230000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/hub.ts
+      entities:
+        - Hub
+        - HubAsset
+        - HubSpokeConfig
+        - HubSpokeConfigSnapshot
+        - HubSpokeFlow
+        - HubAssetDaily
+        - Spoke
+        - FeeMint
+        - Sweep
+        - Reclaim
+        - DeficitEliminated
+      abis:
+        - name: Hub
+          file: ./abis/Hub.json
+      eventHandlers:
+        - event: Add(indexed uint256,indexed address,uint256,uint256)
+          handler: handleAdd
+        - event: Remove(indexed uint256,indexed address,uint256,uint256)
+          handler: handleRemove
+        - event: Draw(indexed uint256,indexed address,uint256,uint256)
+          handler: handleDraw
+        - event: Restore(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256,uint256)
+          handler: handleRestore
+        - event: RefreshPremium(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremium
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256)
+          handler: handleReportDeficit
+        - event: TransferShares(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleTransferShares
+        - event: AddAsset(indexed uint256,indexed address,uint8)
+          handler: handleAddAsset
+        - event: UpdateAsset(indexed uint256,uint256,uint256,uint256)
+          handler: handleUpdateAsset
+        - event: UpdateAssetConfig(indexed uint256,(address,uint16,address,address))
+          handler: handleUpdateAssetConfig
+        - event: AddSpoke(indexed uint256,indexed address)
+          handler: handleAddSpoke
+        - event: UpdateSpokeConfig(indexed uint256,indexed address,(uint40,uint40,uint24,bool,bool))
+          handler: handleUpdateSpokeConfig
+        - event: MintFeeShares(indexed uint256,indexed address,uint256,uint256)
+          handler: handleMintFeeShares
+        - event: Sweep(indexed uint256,indexed address,uint256)
+          handler: handleSweep
+        - event: Reclaim(indexed uint256,indexed address,uint256)
+          handler: handleReclaim
+        - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleEliminateDeficit
+  - kind: ethereum/contract
+    name: HubPlus
+    network: mainnet
+    source:
+      address: "0x06002e9c4412CB7814a791eA3666D905871E536A"
+      abi: Hub
+      startBlock: 22230000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/hub.ts
+      entities:
+        - Hub
+        - HubAsset
+        - HubSpokeConfig
+        - HubSpokeConfigSnapshot
+        - HubSpokeFlow
+        - HubAssetDaily
+        - Spoke
+        - FeeMint
+        - Sweep
+        - Reclaim
+        - DeficitEliminated
+      abis:
+        - name: Hub
+          file: ./abis/Hub.json
+      eventHandlers:
+        - event: Add(indexed uint256,indexed address,uint256,uint256)
+          handler: handleAdd
+        - event: Remove(indexed uint256,indexed address,uint256,uint256)
+          handler: handleRemove
+        - event: Draw(indexed uint256,indexed address,uint256,uint256)
+          handler: handleDraw
+        - event: Restore(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256,uint256)
+          handler: handleRestore
+        - event: RefreshPremium(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremium
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256)
+          handler: handleReportDeficit
+        - event: TransferShares(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleTransferShares
+        - event: AddAsset(indexed uint256,indexed address,uint8)
+          handler: handleAddAsset
+        - event: UpdateAsset(indexed uint256,uint256,uint256,uint256)
+          handler: handleUpdateAsset
+        - event: UpdateAssetConfig(indexed uint256,(address,uint16,address,address))
+          handler: handleUpdateAssetConfig
+        - event: AddSpoke(indexed uint256,indexed address)
+          handler: handleAddSpoke
+        - event: UpdateSpokeConfig(indexed uint256,indexed address,(uint40,uint40,uint24,bool,bool))
+          handler: handleUpdateSpokeConfig
+        - event: MintFeeShares(indexed uint256,indexed address,uint256,uint256)
+          handler: handleMintFeeShares
+        - event: Sweep(indexed uint256,indexed address,uint256)
+          handler: handleSweep
+        - event: Reclaim(indexed uint256,indexed address,uint256)
+          handler: handleReclaim
+        - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleEliminateDeficit
+  - kind: ethereum/contract
+    name: HubPrime
+    network: mainnet
+    source:
+      address: "0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931"
+      abi: Hub
+      startBlock: 22230000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/hub.ts
+      entities:
+        - Hub
+        - HubAsset
+        - HubSpokeConfig
+        - HubSpokeConfigSnapshot
+        - HubSpokeFlow
+        - HubAssetDaily
+        - Spoke
+        - FeeMint
+        - Sweep
+        - Reclaim
+        - DeficitEliminated
+      abis:
+        - name: Hub
+          file: ./abis/Hub.json
+      eventHandlers:
+        - event: Add(indexed uint256,indexed address,uint256,uint256)
+          handler: handleAdd
+        - event: Remove(indexed uint256,indexed address,uint256,uint256)
+          handler: handleRemove
+        - event: Draw(indexed uint256,indexed address,uint256,uint256)
+          handler: handleDraw
+        - event: Restore(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256,uint256)
+          handler: handleRestore
+        - event: RefreshPremium(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremium
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256)
+          handler: handleReportDeficit
+        - event: TransferShares(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleTransferShares
+        - event: AddAsset(indexed uint256,indexed address,uint8)
+          handler: handleAddAsset
+        - event: UpdateAsset(indexed uint256,uint256,uint256,uint256)
+          handler: handleUpdateAsset
+        - event: UpdateAssetConfig(indexed uint256,(address,uint16,address,address))
+          handler: handleUpdateAssetConfig
+        - event: AddSpoke(indexed uint256,indexed address)
+          handler: handleAddSpoke
+        - event: UpdateSpokeConfig(indexed uint256,indexed address,(uint40,uint40,uint24,bool,bool))
+          handler: handleUpdateSpokeConfig
+        - event: MintFeeShares(indexed uint256,indexed address,uint256,uint256)
+          handler: handleMintFeeShares
+        - event: Sweep(indexed uint256,indexed address,uint256)
+          handler: handleSweep
+        - event: Reclaim(indexed uint256,indexed address,uint256)
+          handler: handleReclaim
+        - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleEliminateDeficit
+templates:
+  - kind: ethereum/contract
+    name: Spoke
+    network: mainnet
+    source:
+      abi: Spoke
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/spoke.ts
+      entities:
+        - Spoke
+        - SpokeLiquidationConfig
+        - SpokeLiquidationConfigSnapshot
+        - Reserve
+        - ReserveConfigSnapshot
+        - ReservePriceSourceSnapshot
+        - DynamicReserveConfig
+        - User
+        - UserRiskPremiumSnapshot
+        - UserPositionManager
+        - UserActivity
+        - LiquidationCall
+        - PremiumDebtRefresh
+        - SpokeReportedDeficit
+        - SpokePositionManagerWhitelist
+      abis:
+        - name: Spoke
+          file: ./abis/Spoke.json
+      eventHandlers:
+        - event: SetSpokeImmutables(indexed address,uint16)
+          handler: handleSetSpokeImmutables
+        - event: UpdateLiquidationConfig((uint128,uint64,uint16))
+          handler: handleUpdateLiquidationConfig
+        - event: AddReserve(indexed uint256,indexed uint256,indexed address)
+          handler: handleAddReserve
+        - event: UpdateReserveConfig(indexed uint256,(uint24,bool,bool,bool,bool))
+          handler: handleUpdateReserveConfig
+        - event: UpdateReservePriceSource(indexed uint256,indexed address)
+          handler: handleUpdateReservePriceSource
+        - event: AddDynamicReserveConfig(indexed uint256,indexed uint32,(uint16,uint32,uint16))
+          handler: handleAddDynamicReserveConfig
+        - event: UpdateDynamicReserveConfig(indexed uint256,indexed uint32,(uint16,uint32,uint16))
+          handler: handleUpdateDynamicReserveConfig
+        - event: UpdatePositionManager(indexed address,bool)
+          handler: handleUpdatePositionManager
+        - event: Supply(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleSupply
+        - event: Withdraw(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+        - event: Borrow(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleBorrow
+        - event: Repay(indexed uint256,indexed address,indexed address,uint256,uint256,(int256,int256,uint256))
+          handler: handleRepay
+        - event: LiquidationCall(indexed uint256,indexed uint256,indexed address,address,bool,uint256,uint256,(int256,int256,uint256),uint256,uint256,uint256)
+          handler: handleLiquidationCall
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256))
+          handler: handleSpokeReportDeficit
+        - event: SetUsingAsCollateral(indexed uint256,indexed address,indexed address,bool)
+          handler: handleSetUsingAsCollateral
+        - event: UpdateUserRiskPremium(indexed address,uint256)
+          handler: handleUpdateUserRiskPremium
+        - event: SetUserPositionManager(indexed address,indexed address,bool)
+          handler: handleSetUserPositionManager
+        - event: RefreshPremiumDebt(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremiumDebt
