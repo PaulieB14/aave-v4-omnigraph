@@ -662,5 +662,31 @@
         ]
       }
     ]
+  },
+  {
+    "type": "function",
+    "name": "getLiquidationConfig",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "targetHealthFactor",
+            "type": "uint128"
+          },
+          {
+            "name": "healthFactorForMaxBonus",
+            "type": "uint64"
+          },
+          {
+            "name": "liquidationBonusFactor",
+            "type": "uint16"
+          }
+        ]
+      }
+    ]
   }
 ]

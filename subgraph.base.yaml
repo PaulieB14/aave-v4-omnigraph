@@ -68,6 +68,74 @@ dataSources:
           handler: handleReclaim
         - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
           handler: handleEliminateDeficit
+  - kind: ethereum/contract
+    name: SpokeCoinbaseStocks
+    network: base
+    source:
+      address: "0x17905Db0e4A3514467539956c084180616AE7B8D"
+      abi: Spoke
+      startBlock: 51478800
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/spoke.ts
+      entities:
+        - Spoke
+        - SpokeLiquidationConfig
+        - SpokeLiquidationConfigSnapshot
+        - Reserve
+        - ReserveConfigSnapshot
+        - ReservePriceSourceSnapshot
+        - DynamicReserveConfig
+        - User
+        - UserRiskPremiumSnapshot
+        - UserPositionManager
+        - UserActivity
+        - LiquidationCall
+        - PremiumDebtRefresh
+        - SpokeReportedDeficit
+        - SpokePositionManagerWhitelist
+      abis:
+        - name: Spoke
+          file: ./abis/Spoke.json
+      eventHandlers:
+        - event: SetSpokeImmutables(indexed address,uint16)
+          handler: handleSetSpokeImmutables
+        - event: UpdateLiquidationConfig((uint128,uint64,uint16))
+          handler: handleUpdateLiquidationConfig
+        - event: AddReserve(indexed uint256,indexed uint256,indexed address)
+          handler: handleAddReserve
+        - event: UpdateReserveConfig(indexed uint256,(uint24,bool,bool,bool,bool))
+          handler: handleUpdateReserveConfig
+        - event: UpdateReservePriceSource(indexed uint256,indexed address)
+          handler: handleUpdateReservePriceSource
+        - event: AddDynamicReserveConfig(indexed uint256,indexed uint32,(uint16,uint32,uint16))
+          handler: handleAddDynamicReserveConfig
+        - event: UpdateDynamicReserveConfig(indexed uint256,indexed uint32,(uint16,uint32,uint16))
+          handler: handleUpdateDynamicReserveConfig
+        - event: UpdatePositionManager(indexed address,bool)
+          handler: handleUpdatePositionManager
+        - event: Supply(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleSupply
+        - event: Withdraw(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleWithdraw
+        - event: Borrow(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleBorrow
+        - event: Repay(indexed uint256,indexed address,indexed address,uint256,uint256,(int256,int256,uint256))
+          handler: handleRepay
+        - event: LiquidationCall(indexed uint256,indexed uint256,indexed address,address,bool,uint256,uint256,(int256,int256,uint256),uint256,uint256,uint256)
+          handler: handleLiquidationCall
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256))
+          handler: handleSpokeReportDeficit
+        - event: SetUsingAsCollateral(indexed uint256,indexed address,indexed address,bool)
+          handler: handleSetUsingAsCollateral
+        - event: UpdateUserRiskPremium(indexed address,uint256)
+          handler: handleUpdateUserRiskPremium
+        - event: SetUserPositionManager(indexed address,indexed address,bool)
+          handler: handleSetUserPositionManager
+        - event: RefreshPremiumDebt(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremiumDebt
 templates:
   - kind: ethereum/contract
     name: Spoke
