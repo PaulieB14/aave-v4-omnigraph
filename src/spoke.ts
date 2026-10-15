@@ -88,6 +88,22 @@ function getOrCreateSpoke(spokeAddr: Address, block: BigInt, tx: Bytes): Spoke {
   }
   // SetSpokeImmutables is emitted in the spoke constructor, before the hub's
   // AddSpoke creates this template, so it is never seen. Read ORACLE() instead.
+  if (s.liquidationConfig === null) {
+    let lc = SpokeContract.bind(spokeAddr).try_getLiquidationConfig();
+    if (!lc.reverted) {
+      let id = addrBytes(spokeAddr);
+      let c = new SpokeLiquidationConfig(id);
+      c.spoke = id;
+      c.targetHealthFactor = lc.value.targetHealthFactor;
+      c.healthFactorForMaxBonus = lc.value.healthFactorForMaxBonus;
+      c.liquidationBonusFactor = lc.value.liquidationBonusFactor;
+      c.updatedAtBlock = block;
+      c.updatedAtTx = tx;
+      c.save();
+      s.liquidationConfig = id;
+      s.save();
+    }
+  }
   if (s.oracle === null) {
     let o = SpokeContract.bind(spokeAddr).try_ORACLE();
     if (!o.reverted) {

@@ -39,6 +39,14 @@ const PRIME = "0x943827dca022d0f354a8a8c332da1e5eb9f9f931";
 const GLOBAL_DOLLAR = "0x62d63197660c080236193ca60b70e49a08e90368";
 const COINBASE_STOCKS = "0xa4d5947eb727a052bae69c593ffc84247ec9864e";
 
+// Spokes listed as static data sources in the manifest for this network.
+const STATIC_SPOKES: string[] = ["0x17905db0e4a3514467539956c084180616ae7b8d"];
+
+function isStaticSpoke(addr: Address): boolean {
+  if (dataSource.network() != "base") return false;
+  return STATIC_SPOKES.includes(addr.toHexString().toLowerCase());
+}
+
 function chainIdOf(): i32 {
   let n = dataSource.network();
   if (n == "base") return 8453;
@@ -113,7 +121,9 @@ function getOrCreateSpoke(addr: Address, block: BigInt, tx: Bytes): Spoke {
     s.hub = Bytes.fromHexString(dataSource.address().toHexString());
     s.save();
     // Spin up a Spoke data source so we start indexing this spoke's events.
-    SpokeTemplate.create(addr);
+    // Spokes indexed by a static data source (deployed + configured before the
+    // hub's AddSpoke) must not also get a template, or events double-index.
+    if (!isStaticSpoke(addr)) SpokeTemplate.create(addr);
   }
   if (s.hub === null) {
     s.hub = Bytes.fromHexString(dataSource.address().toHexString());
