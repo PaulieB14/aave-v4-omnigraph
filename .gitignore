@@ -1,7 +1,11 @@
-node_modules/
-generated/
-build/
 *.log
 .DS_Store
 .env
 .env.local
+build
+build-base
+build/
+generated
+generated/
+node_modules
+node_modules/

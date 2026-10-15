@@ -18,6 +18,7 @@ import {
   UpdateUserRiskPremium as UpdateUserRiskPremiumEvent,
   SetUserPositionManager as SetUserPositionManagerEvent,
   RefreshPremiumDebt as RefreshPremiumDebtEvent,
+  Spoke as SpokeContract,
 } from "../generated/templates/Spoke/Spoke";
 import {
   Spoke,
@@ -85,7 +86,27 @@ function getOrCreateSpoke(spokeAddr: Address, block: BigInt, tx: Bytes): Spoke {
     s.createdAtTx = tx;
     s.save();
   }
+  // SetSpokeImmutables is emitted in the spoke constructor, before the hub's
+  // AddSpoke creates this template, so it is never seen. Read ORACLE() instead.
+  if (s.oracle === null) {
+    let o = SpokeContract.bind(spokeAddr).try_ORACLE();
+    if (!o.reverted) {
+      s.oracle = o.value;
+      s.save();
+    }
+  }
   return s as Spoke;
+}
+
+// Fill assetId / hub / config from Spoke.getReserve() when the AddReserve
+// event was missed (emitted before the template existed).
+function backfillReserve(r: Reserve, spokeAddr: Address): void {
+  let res = SpokeContract.bind(spokeAddr).try_getReserve(r.reserveId);
+  if (res.reverted) return;
+  let v = res.value;
+  r.assetId = BigInt.fromI32(v.assetId);
+  r.hub = addrBytes(v.hub);
+  if (r.collateralRisk === null) r.collateralRisk = v.collateralRisk;
 }
 
 function getOrCreateReserve(spokeAddr: Address, reserveId: BigInt, assetId: BigInt, hubAddr: Address): Reserve {
@@ -113,6 +134,11 @@ function getOrCreateReserveLazy(spokeAddr: Address, reserveId: BigInt): Reserve 
     r.reserveId = reserveId;
     r.assetId = BigInt.zero();
     r.hub = Bytes.empty();
+    backfillReserve(r as Reserve, spokeAddr);
+    r.save();
+    getOrCreateSpoke(spokeAddr, BigInt.zero(), Bytes.empty());
+  } else if (r.hub.length == 0) {
+    backfillReserve(r as Reserve, spokeAddr);
     r.save();
   }
   return r as Reserve;
@@ -159,7 +185,12 @@ export function handleUpdateLiquidationConfig(event: UpdateLiquidationConfigEven
 // ── Reserves ──────────────────────────────────────────────
 export function handleAddReserve(event: AddReserveEvent): void {
   let spokeAddr = dataSource.address();
-  getOrCreateReserve(spokeAddr, event.params.reserveId, event.params.assetId, event.params.hub);
+  let r = getOrCreateReserve(spokeAddr, event.params.reserveId, event.params.assetId, event.params.hub);
+  // Always trust the event over any lazily-created placeholder.
+  r.assetId = event.params.assetId;
+  r.hub = addrBytes(event.params.hub);
+  r.save();
+  getOrCreateSpoke(spokeAddr, event.block.number, event.transaction.hash);
 }
 
 export function handleUpdateReserveConfig(event: UpdateReserveConfigEvent): void {

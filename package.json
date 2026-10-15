@@ -2,14 +2,17 @@
   "name": "aave-v4-omnigraph",
   "version": "0.1.0",
   "private": true,
-  "description": "Aave V4 Omnigraph — Hub↔Spoke routing, risk-premium trajectory, liquidation post-mortems, config governance trail, treasury/fee/deficit accounting. Indexes everything AaveKit's GraphQL API doesn't expose.",
+  "description": "Aave V4 Omnigraph \u2014 Hub\u2194Spoke routing, risk-premium trajectory, liquidation post-mortems, config governance trail, treasury/fee/deficit accounting. Indexes everything AaveKit's GraphQL API doesn't expose.",
   "repository": "https://github.com/PaulieB14/aave-v4-omnigraph",
   "license": "MIT",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy:studio": "graph deploy aave-v-4",
-    "auth": "graph auth"
+    "auth": "graph auth",
+    "codegen:base": "graph codegen subgraph.base.yaml",
+    "build:base": "graph build subgraph.base.yaml -o build-base",
+    "deploy:base": "graph deploy aave-v-4-base subgraph.base.yaml -o build-base"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.97.0",
