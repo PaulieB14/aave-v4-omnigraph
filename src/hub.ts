@@ -36,12 +36,22 @@ import { Spoke as SpokeTemplate } from "../generated/templates";
 const CORE = "0xcca852bc40e560adc3b1cc58ca5b55638ce826c9";
 const PLUS = "0x06002e9c4412cb7814a791ea3666d905871e536a";
 const PRIME = "0x943827dca022d0f354a8a8c332da1e5eb9f9f931";
+const GLOBAL_DOLLAR = "0x62d63197660c080236193ca60b70e49a08e90368";
+const COINBASE_STOCKS = "0xa4d5947eb727a052bae69c593ffc84247ec9864e";
+
+function chainIdOf(): i32 {
+  let n = dataSource.network();
+  if (n == "base") return 8453;
+  return 1;
+}
 
 function hubName(addr: Address): string {
   let a = addr.toHexString().toLowerCase();
   if (a == CORE) return "Core";
   if (a == PLUS) return "Plus";
   if (a == PRIME) return "Prime";
+  if (a == GLOBAL_DOLLAR) return "Global Dollar";
+  if (a == COINBASE_STOCKS) return "Coinbase Stocks";
   return "Unknown";
 }
 
@@ -69,7 +79,7 @@ function getOrCreateHub(addr: Address, block: BigInt, tx: Bytes): Hub {
   if (hub == null) {
     hub = new Hub(id);
     hub.name = hubName(addr);
-    hub.chainId = 1;
+    hub.chainId = chainIdOf();
     hub.createdAtBlock = block;
     hub.createdAtTx = tx;
     hub.save();
@@ -98,9 +108,16 @@ function getOrCreateSpoke(addr: Address, block: BigInt, tx: Bytes): Spoke {
     s = new Spoke(id);
     s.createdAtBlock = block;
     s.createdAtTx = tx;
+    // First hub that registers the spoke. A spoke can connect to several hubs;
+    // the full set is available via HubSpokeConfig.
+    s.hub = Bytes.fromHexString(dataSource.address().toHexString());
     s.save();
     // Spin up a Spoke data source so we start indexing this spoke's events.
     SpokeTemplate.create(addr);
+  }
+  if (s.hub === null) {
+    s.hub = Bytes.fromHexString(dataSource.address().toHexString());
+    s.save();
   }
   return s as Spoke;
 }

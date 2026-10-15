@@ -69,6 +69,66 @@ dataSources:
         - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
           handler: handleEliminateDeficit
   - kind: ethereum/contract
+    name: HubGlobalDollar
+    network: mainnet
+    source:
+      address: "0x62d63197660c080236193CA60b70E49A08E90368"
+      abi: Hub
+      startBlock: 24722000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/hub.ts
+      entities:
+        - Hub
+        - HubAsset
+        - HubSpokeConfig
+        - HubSpokeConfigSnapshot
+        - HubSpokeFlow
+        - HubAssetDaily
+        - Spoke
+        - FeeMint
+        - Sweep
+        - Reclaim
+        - DeficitEliminated
+      abis:
+        - name: Hub
+          file: ./abis/Hub.json
+      eventHandlers:
+        - event: Add(indexed uint256,indexed address,uint256,uint256)
+          handler: handleAdd
+        - event: Remove(indexed uint256,indexed address,uint256,uint256)
+          handler: handleRemove
+        - event: Draw(indexed uint256,indexed address,uint256,uint256)
+          handler: handleDraw
+        - event: Restore(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256,uint256)
+          handler: handleRestore
+        - event: RefreshPremium(indexed uint256,indexed address,(int256,int256,uint256))
+          handler: handleRefreshPremium
+        - event: ReportDeficit(indexed uint256,indexed address,uint256,(int256,int256,uint256),uint256)
+          handler: handleReportDeficit
+        - event: TransferShares(indexed uint256,indexed address,indexed address,uint256)
+          handler: handleTransferShares
+        - event: AddAsset(indexed uint256,indexed address,uint8)
+          handler: handleAddAsset
+        - event: UpdateAsset(indexed uint256,uint256,uint256,uint256)
+          handler: handleUpdateAsset
+        - event: UpdateAssetConfig(indexed uint256,(address,uint16,address,address))
+          handler: handleUpdateAssetConfig
+        - event: AddSpoke(indexed uint256,indexed address)
+          handler: handleAddSpoke
+        - event: UpdateSpokeConfig(indexed uint256,indexed address,(uint40,uint40,uint24,bool,bool))
+          handler: handleUpdateSpokeConfig
+        - event: MintFeeShares(indexed uint256,indexed address,uint256,uint256)
+          handler: handleMintFeeShares
+        - event: Sweep(indexed uint256,indexed address,uint256)
+          handler: handleSweep
+        - event: Reclaim(indexed uint256,indexed address,uint256)
+          handler: handleReclaim
+        - event: EliminateDeficit(indexed uint256,indexed address,indexed address,uint256,uint256)
+          handler: handleEliminateDeficit
+  - kind: ethereum/contract
     name: HubPlus
     network: mainnet
     source:

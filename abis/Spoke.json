@@ -3,8 +3,16 @@
     "type": "event",
     "name": "SetSpokeImmutables",
     "inputs": [
-      { "indexed": true, "name": "oracle", "type": "address" },
-      { "indexed": false, "name": "maxUserReservesLimit", "type": "uint16" }
+      {
+        "indexed": true,
+        "name": "oracle",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "maxUserReservesLimit",
+        "type": "uint16"
+      }
     ],
     "anonymous": false
   },
@@ -17,9 +25,18 @@
         "name": "config",
         "type": "tuple",
         "components": [
-          { "name": "targetHealthFactor", "type": "uint128" },
-          { "name": "healthFactorForMaxBonus", "type": "uint64" },
-          { "name": "liquidationBonusFactor", "type": "uint16" }
+          {
+            "name": "targetHealthFactor",
+            "type": "uint128"
+          },
+          {
+            "name": "healthFactorForMaxBonus",
+            "type": "uint64"
+          },
+          {
+            "name": "liquidationBonusFactor",
+            "type": "uint16"
+          }
         ]
       }
     ],
@@ -29,9 +46,21 @@
     "type": "event",
     "name": "AddReserve",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "assetId", "type": "uint256" },
-      { "indexed": true, "name": "hub", "type": "address" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "assetId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "hub",
+        "type": "address"
+      }
     ],
     "anonymous": false
   },
@@ -39,17 +68,36 @@
     "type": "event",
     "name": "UpdateReserveConfig",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "name": "config",
         "type": "tuple",
         "components": [
-          { "name": "collateralRisk", "type": "uint24" },
-          { "name": "paused", "type": "bool" },
-          { "name": "frozen", "type": "bool" },
-          { "name": "borrowable", "type": "bool" },
-          { "name": "receiveSharesEnabled", "type": "bool" }
+          {
+            "name": "collateralRisk",
+            "type": "uint24"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "borrowable",
+            "type": "bool"
+          },
+          {
+            "name": "receiveSharesEnabled",
+            "type": "bool"
+          }
         ]
       }
     ],
@@ -59,8 +107,16 @@
     "type": "event",
     "name": "UpdateReservePriceSource",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "priceSource", "type": "address" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "priceSource",
+        "type": "address"
+      }
     ],
     "anonymous": false
   },
@@ -68,16 +124,33 @@
     "type": "event",
     "name": "AddDynamicReserveConfig",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "dynamicConfigKey", "type": "uint32" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "dynamicConfigKey",
+        "type": "uint32"
+      },
       {
         "indexed": false,
         "name": "config",
         "type": "tuple",
         "components": [
-          { "name": "collateralFactor", "type": "uint16" },
-          { "name": "maxLiquidationBonus", "type": "uint32" },
-          { "name": "liquidationFee", "type": "uint16" }
+          {
+            "name": "collateralFactor",
+            "type": "uint16"
+          },
+          {
+            "name": "maxLiquidationBonus",
+            "type": "uint32"
+          },
+          {
+            "name": "liquidationFee",
+            "type": "uint16"
+          }
         ]
       }
     ],
@@ -87,16 +160,33 @@
     "type": "event",
     "name": "UpdateDynamicReserveConfig",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "dynamicConfigKey", "type": "uint32" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "dynamicConfigKey",
+        "type": "uint32"
+      },
       {
         "indexed": false,
         "name": "config",
         "type": "tuple",
         "components": [
-          { "name": "collateralFactor", "type": "uint16" },
-          { "name": "maxLiquidationBonus", "type": "uint32" },
-          { "name": "liquidationFee", "type": "uint16" }
+          {
+            "name": "collateralFactor",
+            "type": "uint16"
+          },
+          {
+            "name": "maxLiquidationBonus",
+            "type": "uint32"
+          },
+          {
+            "name": "liquidationFee",
+            "type": "uint16"
+          }
         ]
       }
     ],
@@ -106,8 +196,16 @@
     "type": "event",
     "name": "UpdatePositionManager",
     "inputs": [
-      { "indexed": true, "name": "positionManager", "type": "address" },
-      { "indexed": false, "name": "active", "type": "bool" }
+      {
+        "indexed": true,
+        "name": "positionManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "active",
+        "type": "bool"
+      }
     ],
     "anonymous": false
   },
@@ -115,11 +213,31 @@
     "type": "event",
     "name": "Supply",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "caller", "type": "address" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "suppliedShares", "type": "uint256" },
-      { "indexed": false, "name": "suppliedAmount", "type": "uint256" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "caller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "suppliedShares",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "suppliedAmount",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -127,11 +245,31 @@
     "type": "event",
     "name": "Withdraw",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "caller", "type": "address" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "withdrawnShares", "type": "uint256" },
-      { "indexed": false, "name": "withdrawnAmount", "type": "uint256" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "caller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "withdrawnShares",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "withdrawnAmount",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -139,11 +277,31 @@
     "type": "event",
     "name": "Borrow",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "caller", "type": "address" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "drawnShares", "type": "uint256" },
-      { "indexed": false, "name": "drawnAmount", "type": "uint256" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "caller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "drawnShares",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "drawnAmount",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -151,19 +309,48 @@
     "type": "event",
     "name": "Repay",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "caller", "type": "address" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "drawnShares", "type": "uint256" },
-      { "indexed": false, "name": "totalAmountRepaid", "type": "uint256" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "caller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "drawnShares",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "totalAmountRepaid",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "name": "premiumDelta",
         "type": "tuple",
         "components": [
-          { "name": "sharesDelta", "type": "int256" },
-          { "name": "offsetRayDelta", "type": "int256" },
-          { "name": "restoredPremiumRay", "type": "uint256" }
+          {
+            "name": "sharesDelta",
+            "type": "int256"
+          },
+          {
+            "name": "offsetRayDelta",
+            "type": "int256"
+          },
+          {
+            "name": "restoredPremiumRay",
+            "type": "uint256"
+          }
         ]
       }
     ],
@@ -173,26 +360,75 @@
     "type": "event",
     "name": "LiquidationCall",
     "inputs": [
-      { "indexed": true, "name": "collateralReserveId", "type": "uint256" },
-      { "indexed": true, "name": "debtReserveId", "type": "uint256" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "liquidator", "type": "address" },
-      { "indexed": false, "name": "receiveShares", "type": "bool" },
-      { "indexed": false, "name": "debtAmountRestored", "type": "uint256" },
-      { "indexed": false, "name": "drawnSharesLiquidated", "type": "uint256" },
+      {
+        "indexed": true,
+        "name": "collateralReserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "debtReserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "liquidator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "receiveShares",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "name": "debtAmountRestored",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "drawnSharesLiquidated",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "name": "premiumDelta",
         "type": "tuple",
         "components": [
-          { "name": "sharesDelta", "type": "int256" },
-          { "name": "offsetRayDelta", "type": "int256" },
-          { "name": "restoredPremiumRay", "type": "uint256" }
+          {
+            "name": "sharesDelta",
+            "type": "int256"
+          },
+          {
+            "name": "offsetRayDelta",
+            "type": "int256"
+          },
+          {
+            "name": "restoredPremiumRay",
+            "type": "uint256"
+          }
         ]
       },
-      { "indexed": false, "name": "collateralAmountRemoved", "type": "uint256" },
-      { "indexed": false, "name": "collateralSharesLiquidated", "type": "uint256" },
-      { "indexed": false, "name": "collateralSharesToLiquidator", "type": "uint256" }
+      {
+        "indexed": false,
+        "name": "collateralAmountRemoved",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "collateralSharesLiquidated",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "collateralSharesToLiquidator",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -200,17 +436,38 @@
     "type": "event",
     "name": "ReportDeficit",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "drawnShares", "type": "uint256" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "drawnShares",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "name": "premiumDelta",
         "type": "tuple",
         "components": [
-          { "name": "sharesDelta", "type": "int256" },
-          { "name": "offsetRayDelta", "type": "int256" },
-          { "name": "restoredPremiumRay", "type": "uint256" }
+          {
+            "name": "sharesDelta",
+            "type": "int256"
+          },
+          {
+            "name": "offsetRayDelta",
+            "type": "int256"
+          },
+          {
+            "name": "restoredPremiumRay",
+            "type": "uint256"
+          }
         ]
       }
     ],
@@ -220,10 +477,26 @@
     "type": "event",
     "name": "SetUsingAsCollateral",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "caller", "type": "address" },
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "usingAsCollateral", "type": "bool" }
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "caller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "usingAsCollateral",
+        "type": "bool"
+      }
     ],
     "anonymous": false
   },
@@ -231,8 +504,16 @@
     "type": "event",
     "name": "UpdateUserRiskPremium",
     "inputs": [
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "riskPremium", "type": "uint256" }
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "riskPremium",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -240,7 +521,11 @@
     "type": "event",
     "name": "RefreshAllUserDynamicConfig",
     "inputs": [
-      { "indexed": true, "name": "user", "type": "address" }
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      }
     ],
     "anonymous": false
   },
@@ -248,8 +533,16 @@
     "type": "event",
     "name": "RefreshSingleUserDynamicConfig",
     "inputs": [
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": false, "name": "reserveId", "type": "uint256" }
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "reserveId",
+        "type": "uint256"
+      }
     ],
     "anonymous": false
   },
@@ -257,9 +550,21 @@
     "type": "event",
     "name": "SetUserPositionManager",
     "inputs": [
-      { "indexed": true, "name": "user", "type": "address" },
-      { "indexed": true, "name": "positionManager", "type": "address" },
-      { "indexed": false, "name": "approve", "type": "bool" }
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "positionManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "approve",
+        "type": "bool"
+      }
     ],
     "anonymous": false
   },
@@ -267,19 +572,95 @@
     "type": "event",
     "name": "RefreshPremiumDebt",
     "inputs": [
-      { "indexed": true, "name": "reserveId", "type": "uint256" },
-      { "indexed": true, "name": "user", "type": "address" },
+      {
+        "indexed": true,
+        "name": "reserveId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "name": "user",
+        "type": "address"
+      },
       {
         "indexed": false,
         "name": "premiumDelta",
         "type": "tuple",
         "components": [
-          { "name": "sharesDelta", "type": "int256" },
-          { "name": "offsetRayDelta", "type": "int256" },
-          { "name": "restoredPremiumRay", "type": "uint256" }
+          {
+            "name": "sharesDelta",
+            "type": "int256"
+          },
+          {
+            "name": "offsetRayDelta",
+            "type": "int256"
+          },
+          {
+            "name": "restoredPremiumRay",
+            "type": "uint256"
+          }
         ]
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "function",
+    "name": "ORACLE",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getReserve",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "reserveId",
+        "type": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "components": [
+          {
+            "name": "underlying",
+            "type": "address"
+          },
+          {
+            "name": "hub",
+            "type": "address"
+          },
+          {
+            "name": "assetId",
+            "type": "uint16"
+          },
+          {
+            "name": "decimals",
+            "type": "uint8"
+          },
+          {
+            "name": "collateralRisk",
+            "type": "uint24"
+          },
+          {
+            "name": "flags",
+            "type": "uint8"
+          },
+          {
+            "name": "dynamicConfigKey",
+            "type": "uint32"
+          }
+        ]
+      }
+    ]
   }
 ]
