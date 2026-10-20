@@ -24,3 +24,6 @@ All changes are additive (no renames/removals). All contract reads use `try_`.
 - **Supply-side APY / IR strategy curves**: needs Hub view calls (not in the Hub ABI here) and IR-strategy contracts; `drawnRate` from `UpdateAsset` already gives the borrow-rate history.
 - **Market-holiday calendar**: `usMarketHours` uses NYSE 9:30–16:00 ET Mon–Fri with approximate DST; holidays ignored.
 - **Hub-side USD on the same tx**: hub events fire before the spoke event in a tx, so hub USD uses the previous observed price (seconds old).
+
+## v0.2.1
+- Fix: `liquidationPriceUSD` was only computed when the triggering event was on the collateral reserve (usually it is the USDC borrow/repay), so most single-collateral borrowers had null. Now evaluated across all of the user's positions, using the freshly saved price.
