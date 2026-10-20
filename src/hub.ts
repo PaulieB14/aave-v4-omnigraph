@@ -1,4 +1,18 @@
-import { Address, BigInt, Bytes, dataSource } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, dataSource } from "@graphprotocol/graph-ts";
+
+// v0.2.0 USD helper: values hub amounts at the latest oracle price mirrored from the spoke.
+function hubUSD(a: HubAsset, amount: BigInt): BigDecimal | null {
+  let p = a.lastPriceUSD;
+  if (p === null) return null;
+  let s = "1";
+  for (let i = 0; i < a.decimals; i++) s += "0";
+  return amount.toBigDecimal().div(BigDecimal.fromString(s)).times(p as BigDecimal);
+}
+function addBD(x: BigDecimal | null, y: BigDecimal | null): BigDecimal {
+  let a = x === null ? BigDecimal.zero() : (x as BigDecimal);
+  return y === null ? a : a.plus(y as BigDecimal);
+}
+const RAY_BD = BigDecimal.fromString("1000000000000000000000000000");
 import {
   Add as AddEvent,
   Remove as RemoveEvent,
@@ -174,6 +188,9 @@ export function handleAdd(event: AddEvent): void {
   f.save();
   let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
   d.totalAddedAmount = d.totalAddedAmount.plus(event.params.amount);
+  d.addedUSD = addBD(d.addedUSD, hubUSD(asset, event.params.amount));
+  let fu = hubUSD(asset, event.params.amount);
+  if (fu !== null) { f.amountUSD = fu; f.save(); }
   d.flowCount = d.flowCount + 1;
   d.save();
 }
@@ -196,6 +213,9 @@ export function handleRemove(event: RemoveEvent): void {
   f.save();
   let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
   d.totalRemovedAmount = d.totalRemovedAmount.plus(event.params.amount);
+  d.removedUSD = addBD(d.removedUSD, hubUSD(asset, event.params.amount));
+  let fu = hubUSD(asset, event.params.amount);
+  if (fu !== null) { f.amountUSD = fu; f.save(); }
   d.flowCount = d.flowCount + 1;
   d.save();
 }
@@ -218,6 +238,9 @@ export function handleDraw(event: DrawEvent): void {
   f.save();
   let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
   d.totalDrawnAmount = d.totalDrawnAmount.plus(event.params.drawnAmount);
+  d.drawnUSD = addBD(d.drawnUSD, hubUSD(asset, event.params.drawnAmount));
+  let fu = hubUSD(asset, event.params.drawnAmount);
+  if (fu !== null) { f.amountUSD = fu; f.save(); }
   d.flowCount = d.flowCount + 1;
   d.save();
 }
@@ -244,6 +267,9 @@ export function handleRestore(event: RestoreEvent): void {
   f.save();
   let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
   d.totalRestoredAmount = d.totalRestoredAmount.plus(event.params.drawnAmount);
+  d.restoredUSD = addBD(d.restoredUSD, hubUSD(asset, event.params.drawnAmount));
+  let fu = hubUSD(asset, event.params.drawnAmount);
+  if (fu !== null) { f.amountUSD = fu; f.save(); }
   d.flowCount = d.flowCount + 1;
   d.save();
 }
@@ -288,6 +314,10 @@ export function handleReportDeficit(event: ReportDeficitEvent): void {
   f.save();
   let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
   d.totalDeficitRay = d.totalDeficitRay.plus(event.params.deficitAmountRay);
+  asset.totalDeficitRay = (asset.totalDeficitRay === null ? BigInt.zero() : asset.totalDeficitRay as BigInt).plus(event.params.deficitAmountRay);
+  asset.save();
+  let du = hubUSD(asset, event.params.deficitAmountRay.div(BigInt.fromString("1000000000000000000000000000")));
+  if (du !== null) { f.amountUSD = du; f.save(); }
   d.flowCount = d.flowCount + 1;
   d.save();
 }
@@ -327,7 +357,15 @@ export function handleUpdateAsset(event: UpdateAssetEvent): void {
   a.drawnRate = event.params.drawnRate;
   a.accruedFees = event.params.accruedFees;
   a.lastUpdatedBlock = event.block.number;
+  // drawnRate is a RAY-scaled annual rate
+  a.drawnRateAPR = event.params.drawnRate.toBigDecimal().div(RAY_BD);
   a.save();
+  let d = getOrCreateHubAssetDaily(a, event.block.timestamp);
+  d.drawnRate = event.params.drawnRate;
+  d.drawnRateAPR = a.drawnRateAPR;
+  d.drawnIndex = event.params.drawnIndex;
+  d.accruedFees = event.params.accruedFees;
+  d.save();
 }
 
 export function handleUpdateAssetConfig(event: UpdateAssetConfigEvent): void {
@@ -387,10 +425,18 @@ export function handleMintFeeShares(event: MintFeeSharesEvent): void {
   f.feeReceiver = event.params.feeReceiver;
   f.shares = event.params.shares;
   f.assets = event.params.assets;
+  f.assetsUSD = hubUSD(asset, event.params.assets);
   f.block = event.block.number;
   f.timestamp = event.block.timestamp;
   f.txHash = event.transaction.hash;
   f.save();
+  asset.totalFeesMinted = (asset.totalFeesMinted === null ? BigInt.zero() : asset.totalFeesMinted as BigInt).plus(event.params.assets);
+  asset.totalFeesMintedUSD = addBD(asset.totalFeesMintedUSD, f.assetsUSD);
+  asset.save();
+  let d = getOrCreateHubAssetDaily(asset, event.block.timestamp);
+  d.feesMinted = (d.feesMinted === null ? BigInt.zero() : d.feesMinted as BigInt).plus(event.params.assets);
+  d.feesMintedUSD = addBD(d.feesMintedUSD, f.assetsUSD);
+  d.save();
 }
 
 export function handleSweep(event: SweepEvent): void {

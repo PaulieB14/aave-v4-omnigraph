@@ -1,0 +1,31 @@
+[
+ {
+  "type": "function",
+  "name": "getReservePrice",
+  "stateMutability": "view",
+  "inputs": [
+   {
+    "name": "reserveId",
+    "type": "uint256"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint256"
+   }
+  ]
+ },
+ {
+  "type": "function",
+  "name": "decimals",
+  "stateMutability": "view",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint8"
+   }
+  ]
+ }
+]

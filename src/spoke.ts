@@ -1,4 +1,8 @@
-import { Address, BigInt, Bytes, dataSource } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, dataSource } from "@graphprotocol/graph-ts";
+import {
+  ZERO_BD, toUSD, refreshReserve, refreshPosition, refreshAccount, trackDaily,
+  hourOfWeekUTC, dayOfWeekUTC, isUSMarketHours,
+} from "./v2";
 import {
   SetSpokeImmutables as SetSpokeImmutablesEvent,
   UpdateLiquidationConfig as UpdateLiquidationConfigEvent,
@@ -18,6 +22,8 @@ import {
   UpdateUserRiskPremium as UpdateUserRiskPremiumEvent,
   SetUserPositionManager as SetUserPositionManagerEvent,
   RefreshPremiumDebt as RefreshPremiumDebtEvent,
+  RefreshAllUserDynamicConfig as RefreshAllUserDynamicConfigEvent,
+  RefreshSingleUserDynamicConfig as RefreshSingleUserDynamicConfigEvent,
   Spoke as SpokeContract,
 } from "../generated/templates/Spoke/Spoke";
 import {
@@ -158,6 +164,36 @@ function getOrCreateReserveLazy(spokeAddr: Address, reserveId: BigInt): Reserve 
     r.save();
   }
   return r as Reserve;
+}
+
+// ── v0.2.0 enrichment glue ────────────────────────────────
+// Refreshes reserve price/totals, the user's position + account health,
+// daily rollups, and USD/time fields on the activity record.
+function enrich(
+  spokeAddr: Address, r: Reserve, userAddr: Address, ts: BigInt, block: BigInt, tx: Bytes,
+  act: UserActivity | null, amount: BigInt | null, kind: string, collFlag: i32
+): BigDecimal {
+  let s = getOrCreateSpoke(spokeAddr, block, tx);
+  let u = getOrCreateUser(userAddr);
+  refreshReserve(r, s, spokeAddr, ts);
+  let pos = refreshPosition(u, userAddr, r, s, spokeAddr, ts, block, collFlag);
+  refreshAccount(u, userAddr, spokeAddr, ts, pos, r);
+  let usd = amount === null ? ZERO_BD : toUSD(r, amount as BigInt);
+  trackDaily(s, r, u, userAddr, ts, usd, kind, kind == "BORROW");
+  if (kind == "SUPPLY") r.cumulativeSuppliedUSD = (r.cumulativeSuppliedUSD === null ? ZERO_BD : r.cumulativeSuppliedUSD as BigDecimal).plus(usd);
+  if (kind == "BORROW") r.cumulativeBorrowedUSD = (r.cumulativeBorrowedUSD === null ? ZERO_BD : r.cumulativeBorrowedUSD as BigDecimal).plus(usd);
+  r.save();
+  s.save();
+  u.save();
+  if (act !== null) {
+    act.priceUSD = r.lastPriceUSD;
+    if (amount !== null) act.amountUSD = usd;
+    act.hourOfWeekUTC = hourOfWeekUTC(ts);
+    act.dayOfWeekUTC = dayOfWeekUTC(ts);
+    act.usMarketHours = isUSMarketHours(ts);
+    act.save();
+  }
+  return usd;
 }
 
 // ── Spoke setup ───────────────────────────────────────────
@@ -332,6 +368,7 @@ export function handleSupply(event: SupplyEvent): void {
   act.txHash = event.transaction.hash;
   act.logIndex = event.logIndex;
   act.save();
+  enrich(spokeAddr, r, event.params.user, event.block.timestamp, event.block.number, event.transaction.hash, act, event.params.suppliedAmount, "SUPPLY", -1);
 }
 
 export function handleWithdraw(event: WithdrawEvent): void {
@@ -351,6 +388,7 @@ export function handleWithdraw(event: WithdrawEvent): void {
   act.txHash = event.transaction.hash;
   act.logIndex = event.logIndex;
   act.save();
+  enrich(spokeAddr, r, event.params.user, event.block.timestamp, event.block.number, event.transaction.hash, act, event.params.withdrawnAmount, "WITHDRAW", -1);
 }
 
 export function handleBorrow(event: BorrowEvent): void {
@@ -370,6 +408,7 @@ export function handleBorrow(event: BorrowEvent): void {
   act.txHash = event.transaction.hash;
   act.logIndex = event.logIndex;
   act.save();
+  enrich(spokeAddr, r, event.params.user, event.block.timestamp, event.block.number, event.transaction.hash, act, event.params.drawnAmount, "BORROW", -1);
 }
 
 export function handleRepay(event: RepayEvent): void {
@@ -384,6 +423,7 @@ export function handleRepay(event: RepayEvent): void {
   act.caller = event.params.caller;
   act.shares = event.params.drawnShares;
   act.totalAmountRepaid = event.params.totalAmountRepaid;
+  act.amount = event.params.totalAmountRepaid; // v0.2.0: was null for REPAY
   act.premiumSharesDelta = event.params.premiumDelta.sharesDelta;
   act.premiumOffsetRayDelta = event.params.premiumDelta.offsetRayDelta;
   act.restoredPremiumRay = event.params.premiumDelta.restoredPremiumRay;
@@ -392,6 +432,7 @@ export function handleRepay(event: RepayEvent): void {
   act.txHash = event.transaction.hash;
   act.logIndex = event.logIndex;
   act.save();
+  enrich(spokeAddr, r, event.params.user, event.block.timestamp, event.block.number, event.transaction.hash, act, event.params.totalAmountRepaid, "REPAY", -1);
 }
 
 export function handleSetUsingAsCollateral(event: SetUsingAsCollateralEvent): void {
@@ -410,6 +451,7 @@ export function handleSetUsingAsCollateral(event: SetUsingAsCollateralEvent): vo
   act.txHash = event.transaction.hash;
   act.logIndex = event.logIndex;
   act.save();
+  enrich(spokeAddr, r, event.params.user, event.block.timestamp, event.block.number, event.transaction.hash, act, null, "SET_COLLATERAL", event.params.usingAsCollateral ? 1 : 0);
 }
 
 // ── Liquidations ──────────────────────────────────────────
@@ -437,7 +479,37 @@ export function handleLiquidationCall(event: LiquidationCallEvent): void {
   liq.timestamp = event.block.timestamp;
   liq.txHash = event.transaction.hash;
   liq.logIndex = event.logIndex;
+  // v0.2.0 enrichment: refresh both legs, price them, tag time
+  let ts = event.block.timestamp;
+  let debtUSD = enrich(spokeAddr, debtReserve, event.params.user, ts, event.block.number, event.transaction.hash, null, event.params.debtAmountRestored, "LIQUIDATION", -1);
+  let collUSD = enrich(spokeAddr, collateralReserve, event.params.user, ts, event.block.number, event.transaction.hash, null, event.params.collateralAmountRemoved, "LIQUIDATION_COLLATERAL", -1);
+  liq.collateralPriceUSD = collateralReserve.lastPriceUSD;
+  liq.debtPriceUSD = debtReserve.lastPriceUSD;
+  liq.collateralRemovedUSD = collUSD;
+  liq.debtRestoredUSD = debtUSD;
+  liq.liquidatorProfitUSD = collUSD.minus(debtUSD);
+  let u2 = User.load(user.id);
+  if (u2 != null) {
+    liq.healthFactorAfter = u2.healthFactor;
+    let lc = u2.liquidationCount;
+    u2.liquidationCount = (lc === null ? 0 : lc) + 1;
+    u2.save();
+  }
+  liq.hourOfWeekUTC = hourOfWeekUTC(ts);
+  liq.usMarketHours = isUSMarketHours(ts);
   liq.save();
+  let sp = Spoke.load(addrBytes(spokeAddr));
+  if (sp != null) {
+    let c = sp.liquidationCount;
+    sp.liquidationCount = (c === null ? 0 : c) + 1;
+    sp.totalLiquidatedDebtUSD = (sp.totalLiquidatedDebtUSD === null ? ZERO_BD : sp.totalLiquidatedDebtUSD as BigDecimal).plus(debtUSD);
+    sp.save();
+  }
+  let cr = Reserve.load(collateralReserve.id);
+  if (cr != null) {
+    cr.cumulativeLiquidatedUSD = (cr.cumulativeLiquidatedUSD === null ? ZERO_BD : cr.cumulativeLiquidatedUSD as BigDecimal).plus(collUSD);
+    cr.save();
+  }
 }
 
 // ── Spoke-side reported deficit ──────────────────────────
@@ -491,4 +563,34 @@ export function handleRefreshPremiumDebt(event: RefreshPremiumDebtEvent): void {
   ref.timestamp = event.block.timestamp;
   ref.txHash = event.transaction.hash;
   ref.save();
+}
+
+// ── v0.2.0: dynamic-config refreshes (previously unindexed) ──
+export function handleRefreshSingleUserDynamicConfig(event: RefreshSingleUserDynamicConfigEvent): void {
+  let spokeAddr = dataSource.address();
+  let r = getOrCreateReserveLazy(spokeAddr, event.params.reserveId);
+  let u = getOrCreateUser(event.params.user);
+  let act = new UserActivity(eventIdOf(event.transaction.hash, event.logIndex));
+  act.type = "REFRESH_DYNAMIC_CONFIG";
+  act.spoke = addrBytes(spokeAddr);
+  act.reserve = r.id;
+  act.user = u.id;
+  act.block = event.block.number;
+  act.timestamp = event.block.timestamp;
+  act.txHash = event.transaction.hash;
+  act.logIndex = event.logIndex;
+  act.save();
+}
+
+export function handleRefreshAllUserDynamicConfig(event: RefreshAllUserDynamicConfigEvent): void {
+  // No reserve in the event; just refresh account health.
+  let spokeAddr = dataSource.address();
+  let u = getOrCreateUser(event.params.user);
+  let res = SpokeContract.bind(spokeAddr).try_getUserAccountData(event.params.user);
+  if (res.reverted) return;
+  if (!res.value.totalDebtValueRay.isZero()) {
+    u.healthFactor = res.value.healthFactor.toBigDecimal().div(BigDecimal.fromString("1000000000000000000"));
+  }
+  u.accountUpdatedAt = event.block.timestamp;
+  u.save();
 }
