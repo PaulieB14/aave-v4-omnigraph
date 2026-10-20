@@ -96,9 +96,16 @@ dataSources:
         - PremiumDebtRefresh
         - SpokeReportedDeficit
         - SpokePositionManagerWhitelist
+        - UserReservePosition
+        - ReserveDaily
+        - SpokeDaily
       abis:
         - name: Spoke
           file: ./abis/Spoke.json
+        - name: AaveOracle
+          file: ./abis/AaveOracle.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: SetSpokeImmutables(indexed address,uint16)
           handler: handleSetSpokeImmutables
@@ -134,6 +141,10 @@ dataSources:
           handler: handleUpdateUserRiskPremium
         - event: SetUserPositionManager(indexed address,indexed address,bool)
           handler: handleSetUserPositionManager
+        - event: RefreshAllUserDynamicConfig(indexed address)
+          handler: handleRefreshAllUserDynamicConfig
+        - event: RefreshSingleUserDynamicConfig(indexed address,uint256)
+          handler: handleRefreshSingleUserDynamicConfig
         - event: RefreshPremiumDebt(indexed uint256,indexed address,(int256,int256,uint256))
           handler: handleRefreshPremiumDebt
 templates:
@@ -163,9 +174,16 @@ templates:
         - PremiumDebtRefresh
         - SpokeReportedDeficit
         - SpokePositionManagerWhitelist
+        - UserReservePosition
+        - ReserveDaily
+        - SpokeDaily
       abis:
         - name: Spoke
           file: ./abis/Spoke.json
+        - name: AaveOracle
+          file: ./abis/AaveOracle.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
         - event: SetSpokeImmutables(indexed address,uint16)
           handler: handleSetSpokeImmutables
@@ -201,5 +219,9 @@ templates:
           handler: handleUpdateUserRiskPremium
         - event: SetUserPositionManager(indexed address,indexed address,bool)
           handler: handleSetUserPositionManager
+        - event: RefreshAllUserDynamicConfig(indexed address)
+          handler: handleRefreshAllUserDynamicConfig
+        - event: RefreshSingleUserDynamicConfig(indexed address,uint256)
+          handler: handleRefreshSingleUserDynamicConfig
         - event: RefreshPremiumDebt(indexed uint256,indexed address,(int256,int256,uint256))
           handler: handleRefreshPremiumDebt

@@ -42,6 +42,13 @@ type HubAsset @entity(immutable: false) {
   lastUpdatedBlock: BigInt
   spokeConfigs: [HubSpokeConfig!]! @derivedFrom(field: "hubAsset")
   flows: [HubSpokeFlow!]! @derivedFrom(field: "hubAsset")
+  # v0.2.0
+  symbol: String
+  lastPriceUSD: BigDecimal
+  totalFeesMinted: BigInt
+  totalFeesMintedUSD: BigDecimal
+  totalDeficitRay: BigInt
+  drawnRateAPR: BigDecimal
 }
 
 type HubSpokeConfig @entity(immutable: false) {
@@ -84,6 +91,14 @@ type Spoke @entity(immutable: false) {
   createdAtTx: Bytes!
   reserves: [Reserve!]! @derivedFrom(field: "spoke")
   positionManagerWhitelist: [SpokePositionManagerWhitelist!]! @derivedFrom(field: "spoke")
+  # v0.2.0 (USD at oracle price, refreshed on each spoke event)
+  totalSuppliedUSD: BigDecimal
+  totalDebtUSD: BigDecimal
+  userCount: Int
+  borrowerCount: Int
+  liquidationCount: Int
+  totalLiquidatedDebtUSD: BigDecimal
+  daily: [SpokeDaily!]! @derivedFrom(field: "spoke")
 }
 
 type SpokeLiquidationConfig @entity(immutable: false) {
@@ -126,6 +141,29 @@ type Reserve @entity(immutable: false) {
   dynamicConfigHistory: [DynamicReserveConfig!]! @derivedFrom(field: "reserve")
   reserveConfigHistory: [ReserveConfigSnapshot!]! @derivedFrom(field: "reserve")
   priceSourceHistory: [ReservePriceSourceSnapshot!]! @derivedFrom(field: "reserve")
+  # v0.2.0
+  underlying: Bytes
+  symbol: String
+  name: String
+  decimals: Int
+  lastPriceUSD: BigDecimal
+  lastPriceRaw: BigInt
+  lastPriceTimestamp: BigInt
+  totalSupplied: BigInt
+  totalDebt: BigInt
+  totalSuppliedUSD: BigDecimal
+  totalDebtUSD: BigDecimal
+  utilization: BigDecimal
+  collateralFactor: Int
+  maxLiquidationBonus: BigInt
+  liquidationFee: Int
+  supplierCount: Int
+  borrowerCount: Int
+  cumulativeSuppliedUSD: BigDecimal
+  cumulativeBorrowedUSD: BigDecimal
+  cumulativeLiquidatedUSD: BigDecimal
+  daily: [ReserveDaily!]! @derivedFrom(field: "reserve")
+  positions: [UserReservePosition!]! @derivedFrom(field: "reserve")
 }
 
 type ReserveConfigSnapshot @entity(immutable: true) {
@@ -192,6 +230,7 @@ type HubSpokeFlow @entity(immutable: true) {
   timestamp: BigInt!
   txHash: Bytes!
   logIndex: BigInt!
+  amountUSD: BigDecimal
 }
 
 type HubAssetDaily @entity(immutable: false) {
@@ -205,6 +244,17 @@ type HubAssetDaily @entity(immutable: false) {
   totalRestoredAmount: BigInt!
   totalDeficitRay: BigInt!
   flowCount: Int!
+  # v0.2.0 (rates/index close for the day, USD volumes at latest observed price)
+  drawnRate: BigInt
+  drawnRateAPR: BigDecimal
+  drawnIndex: BigInt
+  accruedFees: BigInt
+  feesMinted: BigInt
+  feesMintedUSD: BigDecimal
+  addedUSD: BigDecimal
+  removedUSD: BigDecimal
+  drawnUSD: BigDecimal
+  restoredUSD: BigDecimal
 }
 
 # ── Users + risk premium trajectory ─────────────────────────
@@ -216,6 +266,21 @@ type User @entity(immutable: false) {
   positionManagers: [UserPositionManager!]! @derivedFrom(field: "user")
   liquidationsAsUser: [LiquidationCall!]! @derivedFrom(field: "user")
   premiumDebtRefreshes: [PremiumDebtRefresh!]! @derivedFrom(field: "user")
+  # v0.2.0 account snapshot from Spoke.getUserAccountData at the user's last event
+  healthFactor: BigDecimal
+  totalCollateralUSD: BigDecimal
+  totalDebtUSD: BigDecimal
+  avgCollateralFactor: BigDecimal
+  activeCollateralCount: Int
+  borrowCount: Int
+  accountUpdatedAt: BigInt
+  firstSeenTimestamp: BigInt
+  firstBorrowTimestamp: BigInt
+  secondsToFirstBorrow: BigInt
+  activityCount: Int
+  liquidationCount: Int
+  positions: [UserReservePosition!]! @derivedFrom(field: "user")
+  activities: [UserActivity!]! @derivedFrom(field: "user")
 }
 
 type UserRiskPremiumSnapshot @entity(immutable: true) {
@@ -258,6 +323,7 @@ enum UserActivityType {
   BORROW
   REPAY
   SET_COLLATERAL
+  REFRESH_DYNAMIC_CONFIG
 }
 
 type UserActivity @entity(immutable: true) {
@@ -278,6 +344,12 @@ type UserActivity @entity(immutable: true) {
   timestamp: BigInt!
   txHash: Bytes!
   logIndex: BigInt!
+  # v0.2.0
+  priceUSD: BigDecimal
+  amountUSD: BigDecimal
+  hourOfWeekUTC: Int
+  dayOfWeekUTC: Int
+  usMarketHours: Boolean
 }
 
 # ── Liquidations (highest-value data) ───────────────────────
@@ -301,6 +373,15 @@ type LiquidationCall @entity(immutable: true) {
   timestamp: BigInt!
   txHash: Bytes!
   logIndex: BigInt!
+  # v0.2.0
+  collateralPriceUSD: BigDecimal
+  debtPriceUSD: BigDecimal
+  collateralRemovedUSD: BigDecimal
+  debtRestoredUSD: BigDecimal
+  liquidatorProfitUSD: BigDecimal
+  healthFactorAfter: BigDecimal
+  hourOfWeekUTC: Int
+  usMarketHours: Boolean
 }
 
 # ── Treasury / fees / deficits ──────────────────────────────
@@ -314,6 +395,7 @@ type FeeMint @entity(immutable: true) {
   block: BigInt!
   timestamp: BigInt!
   txHash: Bytes!
+  assetsUSD: BigDecimal
 }
 
 type Sweep @entity(immutable: true) {
@@ -373,4 +455,65 @@ type SpokePositionManagerWhitelist @entity(immutable: false) {
   active: Boolean!
   updatedAtBlock: BigInt!
   updatedAtTx: Bytes!
+}
+
+# ── v0.2.0: positions, daily rollups, cohorts ───────────────
+type UserReservePosition @entity(immutable: false) {
+  id: Bytes! # user . spoke . reserveId
+  user: User!
+  spoke: Spoke!
+  reserve: Reserve!
+  supplied: BigInt!
+  debt: BigInt!
+  suppliedUSD: BigDecimal!
+  debtUSD: BigDecimal!
+  usingAsCollateral: Boolean!
+  "Oracle price at which this collateral makes HF=1, valid only when it is the user's single collateral"
+  liquidationPriceUSD: BigDecimal
+  updatedAt: BigInt!
+  updatedAtBlock: BigInt!
+}
+
+type ReserveDaily @entity(immutable: false) {
+  id: Bytes! # reserveId . day
+  reserve: Reserve!
+  day: Int!
+  date: BigInt!
+  openPriceUSD: BigDecimal
+  highPriceUSD: BigDecimal
+  lowPriceUSD: BigDecimal
+  closePriceUSD: BigDecimal
+  totalSuppliedUSD: BigDecimal!
+  totalDebtUSD: BigDecimal!
+  utilization: BigDecimal!
+  suppliedUSD: BigDecimal!
+  withdrawnUSD: BigDecimal!
+  borrowedUSD: BigDecimal!
+  repaidUSD: BigDecimal!
+  liquidatedUSD: BigDecimal!
+  activityCount: Int!
+  uniqueUsers: Int!
+}
+
+type ReserveDailyUser @entity(immutable: true) {
+  id: Bytes! # reserveDaily . user
+}
+
+type SpokeDaily @entity(immutable: false) {
+  id: Bytes! # spoke . day
+  spoke: Spoke!
+  day: Int!
+  date: BigInt!
+  totalSuppliedUSD: BigDecimal!
+  totalDebtUSD: BigDecimal!
+  volumeUSD: BigDecimal!
+  activityCount: Int!
+  liquidationCount: Int!
+  uniqueUsers: Int!
+  newUsers: Int!
+  newBorrowers: Int!
+}
+
+type SpokeDailyUser @entity(immutable: true) {
+  id: Bytes! # spokeDaily . user
 }
