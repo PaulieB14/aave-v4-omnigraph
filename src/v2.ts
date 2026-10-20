@@ -274,15 +274,24 @@ export function refreshAccount(u: User, userAddr: Address, spokeAddr: Address, t
     u.healthFactor = null;
   }
   // Single-collateral users: HF scales linearly with that collateral's price,
-  // so liquidation price = price / HF.
-  if (hasDebt && v.activeCollateralCount.equals(BigInt.fromI32(1)) && pos.usingAsCollateral && !pos.supplied.isZero() && r.lastPriceUSD !== null && !v.healthFactor.isZero()) {
-    pos.liquidationPriceUSD = (r.lastPriceUSD as BigDecimal).div(u.healthFactor as BigDecimal);
-  } else {
-    pos.liquidationPriceUSD = null;
-  }
+  // so liquidation price = price / HF. Evaluate across ALL the user's positions
+  // (the event's reserve is often the debt reserve, not the collateral).
   pos.save();
-  if (hasDebt && !hadDebt) {
-    // borrower count on spoke handled by caller via return flag on User
+  let single = hasDebt && v.activeCollateralCount.equals(BigInt.fromI32(1)) && !v.healthFactor.isZero();
+  let all = u.positions.load();
+  for (let i = 0; i < all.length; i++) {
+    let p = all[i];
+    let newVal: BigDecimal | null = null;
+    if (single && p.usingAsCollateral && !p.supplied.isZero()) {
+      let rr = Reserve.load(p.reserve);
+      if (rr != null && rr.lastPriceUSD !== null) {
+        newVal = (rr.lastPriceUSD as BigDecimal).div(u.healthFactor as BigDecimal);
+      }
+    }
+    let cur = p.liquidationPriceUSD;
+    if (cur === null && newVal === null) continue;
+    p.liquidationPriceUSD = newVal;
+    p.save();
   }
 }
 

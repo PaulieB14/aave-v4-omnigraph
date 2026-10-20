@@ -177,6 +177,7 @@ function enrich(
   let u = getOrCreateUser(userAddr);
   refreshReserve(r, s, spokeAddr, ts);
   let pos = refreshPosition(u, userAddr, r, s, spokeAddr, ts, block, collFlag);
+  r.save(); // persist fresh price before account-level liquidation-price pass
   refreshAccount(u, userAddr, spokeAddr, ts, pos, r);
   let usd = amount === null ? ZERO_BD : toUSD(r, amount as BigInt);
   trackDaily(s, r, u, userAddr, ts, usd, kind, kind == "BORROW");

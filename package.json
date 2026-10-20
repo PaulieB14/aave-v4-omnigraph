@@ -1,6 +1,6 @@
 {
   "name": "aave-v4-omnigraph",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Aave V4 Omnigraph \u2014 Hub\u2194Spoke routing, risk-premium trajectory, liquidation post-mortems, config governance trail, treasury/fee/deficit accounting. Indexes everything AaveKit's GraphQL API doesn't expose.",
   "repository": "https://github.com/PaulieB14/aave-v4-omnigraph",
